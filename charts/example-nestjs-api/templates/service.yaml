@@ -1,0 +1,22 @@
+{{/*
+  Service: Pod에 대한 네트워크 접근 제공
+  - NodePort: localhost:30000 으로 접근 가능
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "example-nestjs-api.fullname" . }}
+  labels:
+    {{- include "example-nestjs-api.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.service.type "NodePort") .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "example-nestjs-api.selectorLabels" . | nindent 4 }}

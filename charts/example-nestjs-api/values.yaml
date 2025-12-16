@@ -1,0 +1,101 @@
+# Pod 복제본 수
+replicaCount: 1
+
+# 컨테이너 이미지 설정
+image:
+  repository: example-nestjs-api
+  tag: "development"
+  pullPolicy: Never
+
+# Kubernetes Service 설정
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
+  nodePort: 30000
+
+# 컨테이너 리소스 제한
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# 환경변수 설정
+env:
+  NODE_ENV: development
+  PORT: "3000"
+  SERVICE_DOMAIN: "${EXAMPLE_SERVICE_DOMAIN}"
+
+# PostgreSQL 연결 설정
+postgres:
+  databaseName: "${EXAMPLE_POSTGRES_DATABASE_NAME}"
+  primary:
+    user: "${EXAMPLE_NESTJS_POSTGRES_USER}"
+    host: "${EXAMPLE_POSTGRES_PRIMARY_HOST}"
+    port: "${POSTGRES_PRIMARY_PORT}"
+    password: "${EXAMPLE_NESTJS_POSTGRES_PASSWORD}"
+  standby:
+    user: "${EXAMPLE_NESTJS_POSTGRES_USER}"
+    host: "${EXAMPLE_POSTGRES_STANDBY_HOST}"
+    port: "${POSTGRES_STANDBY_PORT}"
+    password: "${EXAMPLE_NESTJS_POSTGRES_PASSWORD}"
+
+# Redis 연결 설정
+redis:
+  mode: "${REDIS_MODE}"
+  host: "${EXAMPLE_REDIS_HOST}"
+  port: "${REDIS_PORT}"
+  username: "${REDIS_USERNAME}"
+  password: "${REDIS_PASSWORD}"
+  dbIndex: "${REDIS_DB_INDEX}"
+
+# JWT 설정
+jwt:
+  accessTokenExpiresIn: "${EXAMPLE_JWT_ACCESS_TOKEN_EXPIRES_IN}"
+  refreshTokenExpiresIn: "${EXAMPLE_JWT_REFRESH_TOKEN_EXPIRES_IN}"
+  secretKey: "${EXAMPLE_JWT_SECRET_KEY}"
+  refreshSecretKey: "${EXAMPLE_JWT_REFRESH_SECRET_KEY}"
+
+# OAuth 설정 (선택사항)
+oauth:
+  google:
+    clientId: "${EXAMPLE_GOOGLE_CLIENT_ID}"
+    clientSecret: "${EXAMPLE_GOOGLE_CLIENT_SECRET}"
+  apple:
+    teamId: "${EXAMPLE_APPLE_TEAM_ID}"
+    clientId: "${EXAMPLE_APPLE_CLIENT_ID}"
+    keyId: "${EXAMPLE_APPLE_KEY_ID}"
+    privateKey: "${EXAMPLE_APPLE_PRIVATE_KEY}"
+
+# Probe 설정
+# path는 /example/nestjs/{NODE_ENV}/api 뒤에 붙는 경로
+probes:
+  startup:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 30
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Ingress 설정 (선택사항)
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: example.api.development
+      paths:
+        - path: /
+          pathType: Prefix

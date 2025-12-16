@@ -1,0 +1,167 @@
+{{/*
+  Deployment: NestJS API Pod 관리
+  - replicas 수만큼 Pod 생성 및 유지
+  - 롤링 업데이트, 롤백 지원
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "example-nestjs-api.fullname" . }}
+  labels:
+    {{- include "example-nestjs-api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "example-nestjs-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "example-nestjs-api.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+
+          env:
+            # 기본 환경변수
+            - name: NODE_ENV
+              value: {{ .Values.env.NODE_ENV | quote }}
+            - name: PORT
+              value: {{ .Values.env.PORT | quote }}
+            - name: SERVICE_DOMAIN
+              value: {{ .Values.env.SERVICE_DOMAIN | quote }}
+
+            # PostgreSQL 설정
+            - name: POSTGRES_DATABASE_NAME
+              value: {{ .Values.postgres.databaseName | quote }}
+            # PostgreSQL Primary
+            - name: POSTGRES_PRIMARY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: postgres-primary-user
+            - name: POSTGRES_PRIMARY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: postgres-primary-password
+            - name: POSTGRES_PRIMARY_HOST
+              value: {{ .Values.postgres.primary.host | quote }}
+            - name: POSTGRES_PRIMARY_PORT
+              value: {{ .Values.postgres.primary.port | quote }}
+            # PostgreSQL Standby
+            {{- if .Values.postgres.standby.user }}
+            - name: POSTGRES_STANDBY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: postgres-standby-user
+            - name: POSTGRES_STANDBY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: postgres-standby-password
+            - name: POSTGRES_STANDBY_HOST
+              value: {{ .Values.postgres.standby.host | quote }}
+            - name: POSTGRES_STANDBY_PORT
+              value: {{ .Values.postgres.standby.port | quote }}
+            {{- end }}
+
+            # Redis 설정
+            - name: REDIS_MODE
+              value: {{ .Values.redis.mode | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+            - name: REDIS_USERNAME
+              value: {{ .Values.redis.username | quote }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: redis-password
+            - name: REDIS_DB_INDEX
+              value: {{ .Values.redis.dbIndex | quote }}
+
+            # JWT 설정
+            - name: JWT_ACCESS_TOKEN_EXPIRES_IN
+              value: {{ .Values.jwt.accessTokenExpiresIn | quote }}
+            - name: JWT_REFRESH_TOKEN_EXPIRES_IN
+              value: {{ .Values.jwt.refreshTokenExpiresIn | quote }}
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: jwt-secret-key
+            - name: JWT_REFRESH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: jwt-refresh-secret-key
+
+            # OAuth 설정 (선택사항)
+            {{- if .Values.oauth.google.clientId }}
+            - name: EXAMPLE_GOOGLE_CLIENT_ID
+              value: {{ .Values.oauth.google.clientId | quote }}
+            - name: EXAMPLE_GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: google-client-secret
+            {{- end }}
+            {{- if .Values.oauth.apple.teamId }}
+            - name: EXAMPLE_APPLE_TEAM_ID
+              value: {{ .Values.oauth.apple.teamId | quote }}
+            - name: EXAMPLE_APPLE_CLIENT_ID
+              value: {{ .Values.oauth.apple.clientId | quote }}
+            - name: EXAMPLE_APPLE_KEY_ID
+              value: {{ .Values.oauth.apple.keyId | quote }}
+            - name: EXAMPLE_APPLE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: apple-private-key
+            {{- end }}
+
+          {{- $apiBasePath := printf "/example/nestjs/%s/api" .Values.env.NODE_ENV }}
+          # Startup Probe
+          {{- if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ printf "%s%s" $apiBasePath .Values.probes.startup.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
+
+          # Liveness Probe
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ printf "%s%s" $apiBasePath .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          {{- end }}
+
+          # Readiness Probe
+          {{- if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ printf "%s%s" $apiBasePath .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          {{- end }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

@@ -1,0 +1,31 @@
+# Helm packaged charts
+*.tgz
+
+# Helm dependencies (downloaded by helm dep update)
+charts/*.tgz
+
+# Environment
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.bak
+*.log
+
+# Generated values files (contain secrets)
+values.generated.yaml
+
+# claude.ai
+.claude

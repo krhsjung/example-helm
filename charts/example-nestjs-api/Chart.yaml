@@ -1,0 +1,14 @@
+# Helm Chart 메타데이터
+apiVersion: v2
+
+# 차트 이름
+name: example-nestjs-api
+
+# 차트 설명
+description: NestJS API 서버 Helm 차트
+
+# 차트 타입 (application: 배포 가능한 앱, library: 재사용 템플릿)
+type: application
+
+# 차트 버전 (차트 변경 시 업데이트)
+version: 0.1.0

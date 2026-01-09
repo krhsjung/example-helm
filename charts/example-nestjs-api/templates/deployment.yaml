@@ -129,6 +129,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "example-nestjs-api.fullname" . }}-secret
                   key: apple-private-key
+            - name: EXAMPLE_APPLE_BUNDLE_ID
+              value: {{ .Values.oauth.apple.bundleId | quote }}
             {{- end }}
 
           {{- $apiBasePath := printf "/example/nestjs/%s/api" .Values.env.NODE_ENV }}

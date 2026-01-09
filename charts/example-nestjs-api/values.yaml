@@ -69,6 +69,7 @@ oauth:
     clientId: "${EXAMPLE_APPLE_CLIENT_ID}"
     keyId: "${EXAMPLE_APPLE_KEY_ID}"
     privateKey: "${EXAMPLE_APPLE_PRIVATE_KEY}"
+    bundleId: "${EXAMPLE_APPLE_BUNDLE_ID}"
 
 # Probe 설정
 # path는 /example/nestjs/{NODE_ENV}/api 뒤에 붙는 경로

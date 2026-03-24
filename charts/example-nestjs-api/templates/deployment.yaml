@@ -133,6 +133,27 @@ spec:
               value: {{ .Values.oauth.apple.bundleId | quote }}
             {{- end }}
 
+            # 딥링크 설정
+            - name: APP_URL_SCHEME
+              value: {{ .Values.deepLink.appUrlScheme | quote }}
+            - name: EXAMPLE_ANDROID_PACKAGE_NAME
+              value: {{ .Values.deepLink.androidPackageName | quote }}
+            - name: EXAMPLE_ANDROID_SHA256_FINGERPRINT
+              value: {{ .Values.deepLink.androidSha256Fingerprint | quote }}
+            - name: EXAMPLE_APP_STORE_URL
+              value: {{ .Values.deepLink.appStoreUrl | quote }}
+            - name: EXAMPLE_PLAY_STORE_URL
+              value: {{ .Values.deepLink.playStoreUrl | quote }}
+
+            # Coturn 설정
+            {{- if .Values.coturn.turnSecret }}
+            - name: COTURN_TURN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "example-nestjs-api.fullname" . }}-secret
+                  key: coturn-turn-secret
+            {{- end }}
+
           {{- $apiBasePath := printf "/example/nestjs/%s/api" .Values.env.NODE_ENV }}
           # Startup Probe
           {{- if .Values.probes.startup.enabled }}

@@ -71,6 +71,18 @@ oauth:
     privateKey: "${EXAMPLE_APPLE_PRIVATE_KEY}"
     bundleId: "${EXAMPLE_APPLE_BUNDLE_ID}"
 
+# 딥링크 설정
+deepLink:
+  appUrlScheme: "${APP_URL_SCHEME}"
+  androidPackageName: "${EXAMPLE_ANDROID_PACKAGE_NAME}"
+  androidSha256Fingerprint: "${EXAMPLE_ANDROID_SHA256_FINGERPRINT}"
+  appStoreUrl: "${EXAMPLE_APP_STORE_URL}"
+  playStoreUrl: "${EXAMPLE_PLAY_STORE_URL}"
+
+# Coturn 설정
+coturn:
+  turnSecret: "${COTURN_TURN_SECRET}"
+
 # Probe 설정
 # path는 /example/nestjs/{NODE_ENV}/api 뒤에 붙는 경로
 probes:

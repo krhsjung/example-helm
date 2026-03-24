@@ -46,6 +46,7 @@ if [ $# -lt 1 ]; then
 fi
 
 CHART_NAME=$1
+NAMESPACE="example"
 ACTION="install"
 
 if [ "$2" = "--uninstall" ]; then
@@ -63,7 +64,7 @@ fi
 # 제거
 if [ "$ACTION" = "uninstall" ]; then
   info "차트 제거 중: ${CHART_NAME}"
-  helm uninstall "${CHART_NAME}" 2>/dev/null || warn "이미 제거되었거나 존재하지 않음"
+  helm uninstall "${CHART_NAME}" -n "${NAMESPACE}" 2>/dev/null || warn "이미 제거되었거나 존재하지 않음"
   info "제거 완료"
   exit 0
 fi
@@ -88,18 +89,18 @@ if [ "$ACTION" = "template" ]; then
   cat "$GENERATED_FILE"
   echo "---"
   info "Helm 템플릿 미리보기:"
-  helm template "${CHART_NAME}" "${CHART_PATH}" -f "$GENERATED_FILE"
+  helm template "${CHART_NAME}" "${CHART_PATH}" -n "${NAMESPACE}" -f "$GENERATED_FILE"
   rm -f "$GENERATED_FILE"
   exit 0
 fi
 
 # 설치
 info "차트 설치 중: ${CHART_NAME}"
-helm install "${CHART_NAME}" "${CHART_PATH}" -f "$GENERATED_FILE"
+helm install "${CHART_NAME}" "${CHART_PATH}" -n "${NAMESPACE}" -f "$GENERATED_FILE"
 
 # 생성된 파일 삭제 (보안)
 rm -f "$GENERATED_FILE"
 
 info "설치 완료!"
-info "상태 확인: helm status ${CHART_NAME}"
-info "Pod 확인: kubectl get pods -l app.kubernetes.io/instance=${CHART_NAME}"
+info "상태 확인: helm status ${CHART_NAME} -n ${NAMESPACE}"
+info "Pod 확인: kubectl get pods -n ${NAMESPACE} -l app.kubernetes.io/instance=${CHART_NAME}"
